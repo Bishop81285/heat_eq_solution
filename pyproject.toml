@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "heat-eq-scheme-1"
+version = "0.1.0"
+description = ""
+authors = ["Artyom Guryanov <bishop81285@gmail.com>"]
+readme = "README.md"
+packages = [{include = "heat_eq_scheme_1"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.25.2"
+matplotlib = "^3.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
