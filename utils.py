@@ -1,8 +1,10 @@
 import numpy as np
+from scipy import special
 
 
-def min_nodes(tau, Nt, T, cond_value):
-    min_nt = Nt
+def kurant_cond(cond_value, Nx, T):
+    min_nt = Nx
+    tau = T / (min_nt - 1)
 
     while tau >= cond_value:
         min_nt += 1
@@ -11,7 +13,7 @@ def min_nodes(tau, Nt, T, cond_value):
     return min_nt
 
 
-def u_an_1(x, t, a):
+def u_an_1(x, t, a, delta):
     u = 0
 
     for k in range(40):
@@ -23,7 +25,7 @@ def u_an_1(x, t, a):
     return u
 
 
-def u_an_2(x, t, a):
+def u_an_2(x, t, a, delta):
     u = (np.exp(-(a * np.pi) ** 2 * t) * np.sin(np.pi * x) +
          1 / 2 * np.exp(-(3 * a * np.pi) ** 2 * t) * np.sin(3 * np.pi * x))
 
@@ -46,8 +48,15 @@ def u_an_3(x, t, a, delta):
     return u
 
 
-def u_an_4(x, t, a):
+def u_an_4(x, t, a, delta):
     u = 1 / np.sqrt(4 * a ** 2 * t + 1) * np.exp(-(x - 0.5) ** 2 / (4 * a ** 2 * t + 1))
+
+    return u
+
+
+def u_an_5(x, t, a, delta):
+    u = 1 / 2 * (special.erf((3 / 4 - x) / (2 * np.sqrt(a ** 2 * t))) - special.erf(
+        (1 / 4 - x) / (2 * np.sqrt(a ** 2 * t))))
 
     return u
 
@@ -68,7 +77,7 @@ def norm_estimate(u, h):
     return n
 
 
-def solve_heat_equation(a, phi, psi_1, psi_2, f, L, T, Nx, Nt, cauchy):
+def solve_heat_equation(a, phi, psi_1, psi_2, f, L, T, Nx, Nt, cauchy, phi_num):
     """
     Функция для решения одномерного уравнения теплопроводности
     u'_t = a^2 * u''_xx + f(x, t) на отрезке [0, L] по x и на интервале [0, T] по t
@@ -92,23 +101,21 @@ def solve_heat_equation(a, phi, psi_1, psi_2, f, L, T, Nx, Nt, cauchy):
 
     # Шаги сетки по x и по t
     if cauchy:
-        h = (2 * L) / (Nx - 1)
+        if phi_num == 4:
+            h = (2 * L) / (Nx - 1)
+        else:
+            h = L / (Nx - 1)
     else:
         h = L / (Nx - 1)
 
     tau = T / (Nt - 1)
 
-    cond_value = h ** 2 / (2 * a ** 2)
-
-    if tau >= cond_value:
-        min_Nt = min_nodes(tau, Nt, T, cond_value)
-
-        print(f"Ошибка! Нарушение условия устойчивости схемы. Минимальное кол-во узлов по t: {min_Nt}")
-        raise ValueError
-
     # Массивы значений x и t
     if cauchy:
-        x = np.linspace(-L, L, Nx)
+        if phi_num == 4:
+            x = np.linspace(-L, L, Nx)
+        else:
+            x = np.linspace(0, L, Nx)
     else:
         x = np.linspace(0, L, Nx)
 
